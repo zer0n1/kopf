@@ -15,4 +15,4 @@ ABSENT = MetaFilterToken.ABSENT
 PRESENT = MetaFilterToken.PRESENT
 
 # Filters for handler specifications (not the same as the object's values).
-MetaFilter = Mapping[str, Union[None, str, MetaFilterToken, callbacks.MetaFilterFn]]
+MetaFilter = Mapping[str, Union[str, MetaFilterToken, callbacks.MetaFilterFn]]

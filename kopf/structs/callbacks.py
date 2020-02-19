@@ -57,7 +57,6 @@ class ResourceChangingFn(Protocol):
     def __call__(  # lgtm[py/similar-function]
             self,
             *args: Any,
-            event: str,  # DEPRECATED
             body: bodies.Body,
             meta: bodies.Meta,
             spec: bodies.Spec,

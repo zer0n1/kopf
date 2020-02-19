@@ -473,7 +473,7 @@ def test_subhandler_imperatively(parent_handler, cause_factory):
 ])
 def test_labels_filter_with_nones(resource, decorator, kwargs):
 
-    with pytest.deprecated_call(match=r"`None` for label filters is deprecated"):
+    with pytest.raises(ValueError):
         @decorator(resource.group, resource.version, resource.plural, **kwargs,
                    labels={'x': None})
         def fn(**_):
@@ -490,7 +490,7 @@ def test_labels_filter_with_nones(resource, decorator, kwargs):
 ])
 def test_annotations_filter_with_nones(resource, decorator, kwargs):
 
-    with pytest.deprecated_call(match=r"`None` for annotation filters is deprecated"):
+    with pytest.raises(ValueError):
         @decorator(resource.group, resource.version, resource.plural, **kwargs,
                    annotations={'x': None})
         def fn(**_):

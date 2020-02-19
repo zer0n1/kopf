@@ -11,9 +11,7 @@ This module is a part of the framework's public interface.
 """
 
 # TODO: add cluster=True support (different API methods)
-import inspect
-import warnings
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 from kopf.reactor import handling, registries
 from kopf.structs import callbacks, dicts, filters, handlers, resources
@@ -32,18 +30,16 @@ def startup(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
 ) -> ActivityDecorator:
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ActivityFn,
     ) -> callbacks.ActivityFn:
-        _warn_deprecated_signatures(fn)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ActivityHandler(
             fn=fn, id=real_id,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             activity=handlers.Activity.STARTUP,
         )
         real_registry.activity_handlers.append(handler)
@@ -58,18 +54,16 @@ def cleanup(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
 ) -> ActivityDecorator:
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ActivityFn,
     ) -> callbacks.ActivityFn:
-        _warn_deprecated_signatures(fn)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ActivityHandler(
             fn=fn, id=real_id,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             activity=handlers.Activity.CLEANUP,
         )
         real_registry.activity_handlers.append(handler)
@@ -84,19 +78,17 @@ def login(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
 ) -> ActivityDecorator:
     """ ``@kopf.on.login()`` handler for custom (re-)authentication. """
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ActivityFn,
     ) -> callbacks.ActivityFn:
-        _warn_deprecated_signatures(fn)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ActivityHandler(
             fn=fn, id=real_id,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             activity=handlers.Activity.AUTHENTICATION,
         )
         real_registry.activity_handlers.append(handler)
@@ -111,19 +103,17 @@ def probe(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
 ) -> ActivityDecorator:
     """ ``@kopf.on.probe()`` handler for arbitrary liveness metrics. """
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ActivityFn,
     ) -> callbacks.ActivityFn:
-        _warn_deprecated_signatures(fn)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ActivityHandler(
             fn=fn, id=real_id,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             activity=handlers.Activity.PROBE,
         )
         real_registry.activity_handlers.append(handler)
@@ -139,7 +129,6 @@ def resume(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
         deleted: Optional[bool] = None,
         labels: Optional[filters.MetaFilter] = None,
@@ -150,14 +139,13 @@ def resume(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceChangingFn,
     ) -> callbacks.ResourceChangingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceChangingHandler(
             fn=fn, id=real_id, field=None,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial=True, deleted=deleted, requires_finalizer=None,
             reason=None,
@@ -175,7 +163,6 @@ def create(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated; use backoff.
         registry: Optional[registries.OperatorRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -185,14 +172,13 @@ def create(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceChangingFn,
     ) -> callbacks.ResourceChangingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceChangingHandler(
             fn=fn, id=real_id, field=None,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial=None, deleted=None, requires_finalizer=None,
             reason=handlers.Reason.CREATE,
@@ -210,7 +196,6 @@ def update(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -220,14 +205,13 @@ def update(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceChangingFn,
     ) -> callbacks.ResourceChangingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceChangingHandler(
             fn=fn, id=real_id, field=None,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial=None, deleted=None, requires_finalizer=None,
             reason=handlers.Reason.UPDATE,
@@ -245,7 +229,6 @@ def delete(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
         optional: Optional[bool] = None,
         labels: Optional[filters.MetaFilter] = None,
@@ -256,14 +239,13 @@ def delete(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceChangingFn,
     ) -> callbacks.ResourceChangingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceChangingHandler(
             fn=fn, id=real_id, field=None,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial=None, deleted=None, requires_finalizer=bool(not optional),
             reason=handlers.Reason.DELETE,
@@ -282,7 +264,6 @@ def field(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -292,15 +273,14 @@ def field(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceChangingFn,
     ) -> callbacks.ResourceChangingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_field = dicts.parse_field(field) or None  # to not store tuple() as a no-field case.
         real_id = registries.generate_id(fn=fn, id=id, suffix=".".join(real_field or []))
         handler = handlers.ResourceChangingHandler(
             fn=fn, id=real_id, field=real_field,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial=None, deleted=None, requires_finalizer=None,
             reason=None,
@@ -323,14 +303,13 @@ def event(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceWatchingFn,
     ) -> callbacks.ResourceWatchingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceWatchingHandler(
             fn=fn, id=real_id,
-            errors=None, timeout=None, retries=None, backoff=None, cooldown=None,
+            errors=None, timeout=None, retries=None, backoff=None,
             labels=labels, annotations=annotations, when=when,
         )
         real_registry.resource_watching_handlers[real_resource].append(handler)
@@ -346,7 +325,6 @@ def daemon(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -360,14 +338,13 @@ def daemon(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceDaemonFn,
     ) -> callbacks.ResourceDaemonFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceDaemonHandler(
             fn=fn, id=real_id,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial_delay=initial_delay, requires_finalizer=True,
             cancellation_backoff=cancellation_backoff,
@@ -387,7 +364,6 @@ def timer(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.OperatorRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -401,14 +377,13 @@ def timer(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceTimerFn,
     ) -> callbacks.ResourceTimerFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         real_registry = registry if registry is not None else registries.get_default_registry()
         real_resource = resources.Resource(group, version, plural)
         real_id = registries.generate_id(fn=fn, id=id)
         handler = handlers.ResourceTimerHandler(
             fn=fn, id=real_id,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial_delay=initial_delay, requires_finalizer=True,
             sharp=sharp, idle=idle, interval=interval,
@@ -427,7 +402,6 @@ def this(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.ResourceChangingRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -465,15 +439,14 @@ def this(  # lgtm[py/similar-function]
     def decorator(  # lgtm[py/similar-function]
             fn: callbacks.ResourceChangingFn,
     ) -> callbacks.ResourceChangingFn:
-        _warn_deprecated_signatures(fn)
-        _warn_deprecated_filters(labels, annotations)
+        _verify_filters(labels, annotations)
         parent_handler = handling.handler_var.get()
         real_registry = registry if registry is not None else handling.subregistry_var.get()
         real_id = registries.generate_id(fn=fn, id=id,
                                          prefix=parent_handler.id if parent_handler else None)
         handler = handlers.ResourceChangingHandler(
             fn=fn, id=real_id, field=None,
-            errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+            errors=errors, timeout=timeout, retries=retries, backoff=backoff,
             labels=labels, annotations=annotations, when=when,
             initial=None, deleted=None, requires_finalizer=None,
             reason=None,
@@ -491,7 +464,6 @@ def register(  # lgtm[py/similar-function]
         timeout: Optional[float] = None,
         retries: Optional[int] = None,
         backoff: Optional[float] = None,
-        cooldown: Optional[float] = None,  # deprecated, use `backoff`
         registry: Optional[registries.ResourceChangingRegistry] = None,
         labels: Optional[filters.MetaFilter] = None,
         annotations: Optional[filters.MetaFilter] = None,
@@ -523,33 +495,23 @@ def register(  # lgtm[py/similar-function]
     """
     decorator = this(
         id=id, registry=registry,
-        errors=errors, timeout=timeout, retries=retries, backoff=backoff, cooldown=cooldown,
+        errors=errors, timeout=timeout, retries=retries, backoff=backoff,
         labels=labels, annotations=annotations, when=when,
     )
     return decorator(fn)
 
 
-def _warn_deprecated_signatures(
-        fn: Callable[..., Any],
-) -> None:
-    argspec = inspect.getfullargspec(fn)
-    if 'cause' in argspec.args or 'cause' in argspec.kwonlyargs:
-        warnings.warn("`cause` kwarg is deprecated; use kwargs directly.", DeprecationWarning)
-
-
-def _warn_deprecated_filters(
+def _verify_filters(
         labels: Optional[filters.MetaFilter],
         annotations: Optional[filters.MetaFilter],
 ) -> None:
     if labels is not None:
         for key, val in labels.items():
             if val is None:
-                warnings.warn(
-                    f"`None` for label filters is deprecated; use kopf.PRESENT.",
-                    DeprecationWarning, stacklevel=2)
+                raise ValueError("`None` for label filters is not supported; "
+                                 "use kopf.PRESENT or kopf.ABSENT.")
     if annotations is not None:
         for key, val in annotations.items():
             if val is None:
-                warnings.warn(
-                    f"`None` for annotation filters is deprecated; use kopf.PRESENT.",
-                    DeprecationWarning, stacklevel=2)
+                raise ValueError("`None` for annotation filters is not supported; "
+                                 "use kopf.PRESENT or kopf.ABSENT.")

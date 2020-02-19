@@ -101,7 +101,7 @@ async def execute(
             real_id = registries.generate_id(fn=fn, id=id, prefix=parent_prefix)
             handler = handlers_.ResourceChangingHandler(
                 fn=fn, id=real_id,
-                errors=None, timeout=None, retries=None, backoff=None, cooldown=None,
+                errors=None, timeout=None, retries=None, backoff=None,
                 labels=None, annotations=None, when=None,
                 initial=None, deleted=None, requires_finalizer=None,
                 reason=None, field=None,
@@ -114,7 +114,7 @@ async def execute(
             real_id = registries.generate_id(fn=fn, id=None, prefix=parent_prefix)
             handler = handlers_.ResourceChangingHandler(
                 fn=fn, id=real_id,
-                errors=None, timeout=None, retries=None, backoff=None, cooldown=None,
+                errors=None, timeout=None, retries=None, backoff=None,
                 labels=None, annotations=None, when=None,
                 initial=None, deleted=None, requires_finalizer=None,
                 reason=None, field=None,
@@ -340,7 +340,7 @@ async def invoke_handler(
     # For the field-handlers, the old/new/diff values must match the field, not the whole object.
     if (True and  # for readable indenting
             isinstance(cause, causation.ResourceChangingCause) and
-            isinstance(handler, handlers_.ResourceHandler) and
+            isinstance(handler, handlers_.ResourceChangingHandler) and
             handler.field is not None):
         old = dicts.resolve(cause.old, handler.field, None, assume_empty=True)
         new = dicts.resolve(cause.new, handler.field, None, assume_empty=True)
