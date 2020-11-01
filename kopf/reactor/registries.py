@@ -348,24 +348,26 @@ class OperatorRegistry:
         self.resource_spawning_handlers = ResourceSpawningRegistry()
         self.resource_changing_handlers = ResourceChangingRegistry()
 
-    @property
-    def resources(self) -> FrozenSet[references.Resource]:
-        """ All known resources in the registry. """
-        # It is a convertion point between the operator's specification (at handlers registration)
-        # and the operator's runtime (watching & streaming of events for specific resources).
-        selectors: FrozenSet[references.Selector] = frozenset(
-            {h.selector for h in self.resource_watching_handlers.get_all_handlers() if h.selector} |
-            {h.selector for h in self.resource_spawning_handlers.get_all_handlers() if h.selector} |
-            {h.selector for h in self.resource_changing_handlers.get_all_handlers() if h.selector}
-        )
-        return frozenset({
-            references.Resource(selector.group, selector.version, selector.plural)
-            for selector in selectors
-        })
-
     #
     # Everything below is deprecated and will be removed in the next major release.
     #
+
+    @property
+    def resources(self) -> FrozenSet[references.Selector]:
+        """
+        All known resources in the registry.
+
+        **DEPRECATED:** It has lost its meaning, as there are no more specific
+        resources, but only the partial resource specifications or globs/masks.
+        The actual resources are retrieved from the cluster at runtime.
+        """
+        warnings.warn("registry.resources is deprecated; stop introscoping the registry at all.",
+                      DeprecationWarning)
+        return frozenset(
+            {h.selector for h in self.resource_watching_handlers.get_all_handlers() if h.selector} |
+            {h.selector for h in self.resource_changing_handlers.get_all_handlers() if h.selector} |
+            {h.selector for h in self.resource_spawning_handlers.get_all_handlers() if h.selector}
+        )
 
     def register_activity_handler(
             self,
