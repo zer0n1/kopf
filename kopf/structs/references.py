@@ -122,6 +122,7 @@ class Resource:
     subresources: Collection[str]
     namespaced: bool
     preferred: bool
+    verbs: Collection[str]
 
     def __hash__(self) -> int:
         return hash((self.group, self.version, self.plural))
