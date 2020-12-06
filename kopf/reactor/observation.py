@@ -286,12 +286,18 @@ def revise_resources(
         logger.warning("Unresolved resources cannot be served (try creating their CRDs):"
                        f" {unresolved_names}")
 
-    # Warn for resources that lack mandatory operations that make the framework possible.
+    # For patching, only react if there are handlers that store a state (i.e. any except @on.event).
     nonwatchable = {resource for resources in resolved.values() for resource in resources
                     if 'watch' not in resource.verbs and 'list' not in resource.verbs}
+    nonpatchable = {resource for resources in resolved.values() for resource in resources
+                    if 'patch' not in resource.verbs} - nonwatchable
     if nonwatchable:
         logger.warning(f"Non-watchable resources will not be served: {nonwatchable}")
         insights.resources.difference_update(nonwatchable)
+    if nonpatchable and any(handler.requires_patching for handler in all_handlers):
+        logger.warning(f"Non-patchable resources will not be served: {nonpatchable}")
+        insights.resources.difference_update(nonpatchable)
+
 
 async def resource_observer(
         *,
